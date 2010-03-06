@@ -7,19 +7,21 @@ from glashammer.utils import run_very_simple
 
 # apps
 from orgbase import OrgBase
+from glasnaegel.bundles.admin import AdminSite
 
 
 @make_app
 def wsgi_app(app):
-    app.add_shared('', app.instance_dir+'/shared/')
-    app.add_template_searchpath('templates/')
-
-    app.add_setup(OrgBase(mountpoint_path='/'))
-
     # XXX this should read "app.conf.change_single(...)", but it raises KeyError
     # as if bundle "auth" did not define this variable -- though it did!
     app.add_config_var('auth/secret', unicode, 'i34jgg89e3n')
+    
+    app.add_shared('', app.instance_dir+'/shared/')
+    app.add_template_searchpath('templates/')
 
+    app.add_setup(AdminSite(mountpoint_path='/admin/'))
+    app.add_setup(OrgBase(mountpoint_path='/'))
+    
 if __name__ == '__main__':
     print
     print 'RULES:'

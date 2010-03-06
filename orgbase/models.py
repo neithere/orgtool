@@ -13,7 +13,7 @@ P = Property
 
 
 class NamedModel(Model):
-    title = P(required=True)
+    title = P(required=True, label=u'название')
 
     class Meta:
         must_have = {'title__exists': True}
@@ -23,8 +23,9 @@ class NamedModel(Model):
 
 
 class TrackedModel(Model):
-    created = DateTime(required=True, default=datetime.datetime.now)
-    updated = DateTime(required=True)
+    created = DateTime(required=True, default=datetime.datetime.now,
+                       label=u'дата создания')
+    updated = DateTime(required=True, label=u'дата обновления')
 
     class Meta:
         must_have = {'created__exists': True, 'updated__exists': True}
@@ -53,8 +54,8 @@ class NoteCategory(NamedModel):
 
 
 class Person(TrackedModel):
-    first_name = Property(required=True)
-    last_name = Property()
+    first_name = Property(required=True, label=u'имя')
+    last_name = Property(label=u'фамилия')
 
     class Meta:
         must_have = {'first_name__exists': True}
@@ -67,20 +68,20 @@ class Person(TrackedModel):
 
 
 class Goal(NamedModel, TrackedModel):
-    parent = Reference('self')
-    domain = Reference(Domain)
-    summary = P()
-    is_accomplished = Boolean(default=False)
-    is_cancelled = Boolean(default=False)
+    parent = Reference('self', label=u'вышестоящая цель')
+    domain = Reference(Domain, label=u'сфера деятельности')
+    summary = P(label=u'')
+    is_accomplished = Boolean(default=False, label=u'достигнута')
+    is_cancelled = Boolean(default=False, label=u'отменена')
 
     class Meta:
         must_have = {'is_goal': True}
 
 
 class Item(TrackedModel):
-    summary = P(required=True)
-    domain  = Reference(Domain)
-    goal    = Reference(Goal)
+    summary = P(required=True, label=u'описание')
+    domain  = Reference(Domain, label=u'сфера деятельности')
+    goal    = Reference(Goal, label=u'цель')
     #is_processed  = Boolean(default=False)
     #is_deleted    = Boolean(default=False)
     #is_referenced = Boolean(default=False)
@@ -95,7 +96,7 @@ class InboxItem(Item):
 
 
 class ProcessedItem(Item, NamedModel):
-    summary = P(required=False)
+    summary = P(required=False, label=u'описание')
 
     class Meta:
         must_have = {'is_processed': True}
@@ -107,10 +108,10 @@ class CancelledItem(ProcessedItem):
 
 
 class Task(ProcessedItem):
-    context  = Reference(ActionContext)
-    due_date = Date()
-    is_done  = Boolean(default=False)
-    estimated_effort = Number() # in minutes
+    context  = Reference(ActionContext, label=u'контекст')
+    due_date = Date(label=u'дедлайн')
+    is_done  = Boolean(default=False, label=u'готово')
+    estimated_effort = Number(label=u'оценка затрат') # in minutes
 
     class Meta:
         must_have = {'requires_action': True}
@@ -122,7 +123,7 @@ class Task(ProcessedItem):
 
 
 class DelegatedTask(Task):
-    delegated_to = Reference(Person, required=True)
+    delegated_to = Reference(Person, required=True, label=u'ответственное лицо')
 
     class Meta:
         must_have = {'delegated_to__exists': True}
@@ -134,14 +135,14 @@ class ToDo(Task):
 
 
 class CompletedTask(Task):
-    spent_effort = Number() # in minutes
+    spent_effort = Number(label=u'затраты (в минутах)') # in minutes
 
     class Meta:
         must_have = {'is_done': True}
 
 
 class Note(ProcessedItem):
-    note_category = Reference(NoteCategory)
+    note_category = Reference(NoteCategory, label=u'категория')
 
     class Meta:
         must_have = {'note_category__exists': True}

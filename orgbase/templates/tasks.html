@@ -14,7 +14,7 @@
         </tr>
         {% for object in objects %}
         <tr>
-            <td><a href="{{ url_for('orgbase/task', pk=object._key) }}">{{ object }}</a></td>
+            <td><a href="{{ url_for('orgbase/task', pk=object.pk) }}">{{ object }}</a></td>
             <td>{{ object.created.strftime('%d&nbsp;%B&nbsp;%Y') }}</td>
             <td>{{ object.updated.strftime('%d&nbsp;%B&nbsp;%Y') }}</td>
         </tr>
