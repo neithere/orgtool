@@ -1,0 +1,10 @@
+# temp files
+
+~$
+\.swp$
+
+# dist-specific files
+
+\.pyc$
+\.pyo$
+

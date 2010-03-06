@@ -1,0 +1,21 @@
+{% extends "_base.html" %}
+{% block heading %}Goals{% endblock heading %}
+{% block content %}
+
+    <p>We've got <strong>{{ objects.count() }}</strong> goals:</p>
+    <table style="width:100%">
+        <tr>
+            <th>Заголовок</th>
+            <th>дата создания</th>
+            <th>дата обновления</th>
+        </tr>
+        {% for object in objects.order_by('-updated') %}
+        <tr>
+            <td><a href="{{ url_for('orgbase/goal', pk=object._key) }}">{{ object }}</a></td>
+            <td>{{ object.created.strftime('%d %B %Y') }}</td>
+            <td>{{ object.updated.strftime('%d %B %Y') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}

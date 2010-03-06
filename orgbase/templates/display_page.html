@@ -1,0 +1,18 @@
+{% extends "_base.html" %}
+{% block heading %}{{ page.name }}{% endblock heading %}
+{% block content %}
+
+    <p><a href="{{ url_for('wiki/edit', slug=page.slug) }}">Редактировать</a></p>
+
+    {{ page.text }}
+
+    {% if page._key %}
+        <p class="date">
+            {{ page.created.strftime('%d %B %Y') }}
+            {% if page.created.date() != page.updated.date() %}
+                (updated {{ page.updated.strftime('%d %B') }})
+            {% endif %}
+        </p>
+    {% endif %}
+
+{% endblock %}

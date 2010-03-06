@@ -1,0 +1,21 @@
+{% extends "_base.html" %}
+{% block heading %}Welcome to neithere.net{% endblock heading %}
+{% block content %}
+
+    <p>We've got <strong>{{ pages.count() }}</strong> pages:</p>
+    <table style="width:100%">
+        <tr>
+            <th>Заголовок</th>
+            <th>дата создания</th>
+            <th>дата обновления</th>
+        </tr>
+        {% for page in pages.order_by('-updated') %}
+        <tr>
+            <td><a href="{{ url_for('orgbase/goal', slug=page.slug) }}">{{ page }}</a></td>
+            <td>{{ page.created.strftime('%d %B %Y') }}</td>
+            <td>{{ page.updated.strftime('%d %B %Y') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}
