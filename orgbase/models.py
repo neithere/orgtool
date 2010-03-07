@@ -5,9 +5,34 @@ import datetime
 from pymodels import *
 P = Property
 
+# GH
+from glashammer.utils import url_for
+
 # bundles
+from glasnaegel.bundles.admin import AdminSite
 #from glasnaegel.auth.models import User
 
+
+#--- admin decorators ---
+
+def _get_url_for_object(obj):
+    # our custom function to map model instances to views/endpoints
+    model_name = obj._meta.label.replace(' ', '_')
+    return url_for('orgbase/%s' % model_name, **{'pk': obj.pk})
+
+
+def admin(model):
+    """
+    Registers given model with admin appliance.
+    """
+
+    excluded = []
+    if issubclass(model, TrackedModel):
+        excluded = ['created', 'updated']
+    AdminSite.register(model, namespace='organizer', url=_get_url_for_object,
+                       exclude=excluded)
+
+    return model
 
 #--- abstract models ---     (not really abstract, just not to be used directly)
 
@@ -38,24 +63,29 @@ class TrackedModel(Model):
 #--- categorizing models (boxes) ---
 
 
+@admin
 class Domain(NamedModel):
     class Meta:
         must_have = {'is_domain': True}
 
 
+@admin
 class ActionContext(NamedModel):
     class Meta:
         must_have = {'is_context': True}
 
 
+@admin
 class NoteCategory(NamedModel):
     class Meta:
         must_have = {'is_reference_category': True}
 
 
+@admin
 class Person(TrackedModel):
     first_name = Property(required=True, label=u'имя')
     last_name = Property(label=u'фамилия')
+    email = Property(label=u'e-mail')
 
     class Meta:
         must_have = {'first_name__exists': True}
@@ -67,6 +97,7 @@ class Person(TrackedModel):
 #--- concrete models (papers) ---
 
 
+@admin
 class Goal(NamedModel, TrackedModel):
     parent = Reference('self', label=u'вышестоящая цель')
     domain = Reference(Domain, label=u'сфера деятельности')
@@ -78,6 +109,7 @@ class Goal(NamedModel, TrackedModel):
         must_have = {'is_goal': True}
 
 
+@admin
 class Item(TrackedModel):
     summary = P(required=True, label=u'описание')
     domain  = Reference(Domain, label=u'сфера деятельности')
@@ -88,6 +120,7 @@ class Item(TrackedModel):
     #is_incubated  = Boolean(default=False)
 
 
+@admin
 class InboxItem(Item):
     # source = ...
 
@@ -95,6 +128,7 @@ class InboxItem(Item):
         must_have = {'is_processed': False}
 
 
+@admin
 class ProcessedItem(Item, NamedModel):
     summary = P(required=False, label=u'описание')
 
@@ -102,11 +136,13 @@ class ProcessedItem(Item, NamedModel):
         must_have = {'is_processed': True}
 
 
+@admin
 class CancelledItem(ProcessedItem):
     class Meta:
         must_have = {'is_cancelled': True}
 
 
+@admin
 class Task(ProcessedItem):
     context  = Reference(ActionContext, label=u'контекст')
     due_date = Date(label=u'дедлайн')
@@ -122,18 +158,21 @@ class Task(ProcessedItem):
             return delta.days
 
 
+@admin
 class DelegatedTask(Task):
     delegated_to = Reference(Person, required=True, label=u'ответственное лицо')
 
     class Meta:
         must_have = {'delegated_to__exists': True}
+        must_not_have = {'delegated_to': ''}
 
 
+@admin
 class ToDo(Task):
     class Meta:
         must_have = {'is_done': False, 'is_cancelled': False}
 
-
+@admin
 class CompletedTask(Task):
     spent_effort = Number(label=u'затраты (в минутах)') # in minutes
 
@@ -141,6 +180,7 @@ class CompletedTask(Task):
         must_have = {'is_done': True}
 
 
+@admin
 class Note(ProcessedItem):
     note_category = Reference(NoteCategory, label=u'категория')
 
@@ -148,6 +188,7 @@ class Note(ProcessedItem):
         must_have = {'note_category__exists': True}
 
 
+@admin
 class Someday(ProcessedItem):
     class Meta:
         must_have = {'requires_action': False}

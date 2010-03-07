@@ -13,7 +13,7 @@ from glasnaegel.utils import Appliance, expose, paginated
 # this appliance
 from forms import GoalForm
 from models import Goal, Task  # TODO many other models
-import admin    # will register models automatically
+#import admin    # will register models automatically
 
 
 class OrgBase(Appliance):
