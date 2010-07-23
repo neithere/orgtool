@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{# <p>{{ object.first_name }} {{ object.second_name }} {{ object.last_name }}</p> #}
+
+{% if object.details %}
+    <p>{{ object.details }}</p>
+{% endif %}
+
+{% if object.contacts %}
+    <ul>
+    {% for contact in object.contacts %}
+        <li>{{ contact.kind }} <strong>{{ contact.value|urlize() }}</strong>
+           ({{ contact.scope }})</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+{% endblock content %}
