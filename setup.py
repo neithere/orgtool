@@ -52,9 +52,12 @@ setup(
     #   $ rm -rf orgtool.egg-info
     #   $ pip install .
     extras_require = {
+        # NOTE: gammu is N/A at PyPI, only as part of the gammu distribution
+        'Mobile': ['gammu>=1.28.0'],
     },
     entry_points = {
         'extensions': [
+            'mobile = orgtool.ext.mobile [Mobile]',
         ],
     },
 
