@@ -36,5 +36,5 @@ def bookmark_index(request, tag=None):
         bookmarks = bookmarks.where(tags__contains_all=tag)
     if 'q' in request.values:
         # TODO: multiple fields
-        bookmarks = bookmarks.where(name__contains=request.values['q'])
+        bookmarks = bookmarks.where(summary__contains=request.values['q'])
     return {'object_list': bookmarks}
