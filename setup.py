@@ -27,8 +27,7 @@ from _version import version
 
 
 readme = open(os.path.join(os.path.dirname(__file__), 'README')).read()
-print find_packages()
-assert 1==0
+
 setup(
     # overview
     name             = 'orgtool',
@@ -53,9 +52,11 @@ setup(
     #   $ pip install .
     extras_require = {
         # NOTE: hamster doesn't export __version__ and N/A at PyPI
-        'Hamster': ['hamster>=2.31', 'pytz>=2010h', 'dbus>=0.83'],
+        #'Hamster': ['hamster>=2.31', 'pytz>=2010h', 'dbus>=0.83'],
+        'Hamster': ['pytz>=2010h'],
         # NOTE: gammu is N/A at PyPI, only as part of the gammu distribution
-        'Mobile': ['gammu>=1.28.0'],
+        #'Mobile': ['gammu>=1.28.0'],
+        'Mobile': [],
     },
     entry_points = {
         'extensions': [
