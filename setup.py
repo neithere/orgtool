@@ -42,6 +42,8 @@ setup(
         'python (>= 2.6)',
         'docu (>=0.23)',    # data storage & query
         'tool (>=0.3)',     # web / cli / signals
+        'lepl (>=4.3)',     # parsing strings (e.g. fancy dates)
+        'dateutil (>=1.5)', # recurring dates, etc.
     ],
     provides = ['orgtool'],
 
