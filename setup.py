@@ -52,11 +52,14 @@ setup(
     #   $ rm -rf orgtool.egg-info
     #   $ pip install .
     extras_require = {
+        # NOTE: hamster doesn't export __version__ and N/A at PyPI
+        'Hamster': ['hamster>=2.31', 'pytz>=2010h', 'dbus>=0.83'],
         # NOTE: gammu is N/A at PyPI, only as part of the gammu distribution
         'Mobile': ['gammu>=1.28.0'],
     },
     entry_points = {
         'extensions': [
+            'hamster = orgtool.ext.hamster [Hamster]',
             'mobile = orgtool.ext.mobile [Mobile]',
         ],
     },
