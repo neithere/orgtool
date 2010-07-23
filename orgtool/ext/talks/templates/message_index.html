@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style type="text/css">
+.date {
+    background: #999;
+    color: white; 
+    padding: 0.2em 1ex;
+    font-family: sans-serif;
+}
+.date a {
+    color: white;
+    font-weight: bold;
+}
+.sender {
+    color: darkgreen
+}
+.receiver {
+    color: navy
+}
+</style>
+{% endblock head %}
+
+
+{% block content %}
+
+<form action="." method="GET">
+    <input type="text" name="q" value=""/>
+    <input type="submit"/>
+</form>
+
+<p>There are {{ object_list.count() }} messages:</p>
+
+<ol>
+{% for obj in object_list %}
+    <li>
+        <p>
+            <!--<a href="?state={{ obj.state }}">{{ obj.state }}</a>
+            &nbsp;&nbsp;-->
+            <span class="date">
+                <a href="{{ url_for('orgtool.ext.talks.views.message_index',
+                                    year=obj.date_time.year, 
+                                    month=obj.date_time.month,
+                                    day=obj.date_time.day) }}">
+                {{ obj.date_time.day }}</a>
+                <a href="{{ url_for('orgtool.ext.talks.views.message_index',
+                                    year=obj.date_time.year, 
+                                    month=obj.date_time.month) }}">
+                {{ obj.date_time.strftime("%B") }}</a>
+                <a href="{{ url_for('orgtool.ext.talks.views.message_index',
+                                    year=obj.date_time.year) }}">
+                {{ obj.date_time.year }}</a>
+                {{ obj.date_time.time() }}
+            </span>
+            &nbsp;&nbsp;
+            <!--<a href="?number={{ obj.number|replace('+', '%2B') }}">{{ obj.number }}</a>-->
+            <a class="sender" href="?sent_by={{ obj.sent_by|replace('+', '%2B') }}">{{ obj.sent_by }}</a>
+            &rarr; 
+            <a class="receiver" href="?sent_to={{ obj.sent_to|replace('+', '%2B') }}">{{ obj.sent_to }}</a>
+        </p>
+        <p style="font-family: monospace;">{{ obj.summary }}</p>
+    </li>
+{% endfor %}
+</ol>
+
+{% endblock content %}
