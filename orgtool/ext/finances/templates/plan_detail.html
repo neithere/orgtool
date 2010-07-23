@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p><a href="{{ admin_url_for(object, 'finances') }}">View in admin</a></p>
+
+<div style="float: right; width: 48%;"
+    {% if object.stakeholder %}
+        <p>Заинтересованное лицо: {{ object.stakeholder|urlize(40, true) }}</p>
+    {% endif %}
+   
+    {% if object.valid_since or object.valid_until %}
+        <p>Valid since {{ object.valid_since.strftime("%d.%m.%Y") if object.valid_since else "(unknown)" }} 
+                 until {{ object.valid_until.strftime("%d.%m.%Y") if object.valid_until else "forever" }}.</p>
+    {% else %}
+        <p>No time bounds.</p>
+    {% endif %}
+
+    {% if object.payments %}
+        <p>{{ object.payments|count }} payments between
+           {{ object.payments[-1].date_time.strftime("%d.%m.%Y") }}
+           and
+           {{ object.payments[0].date_time.strftime("%d.%m.%Y") }}.
+        </p>
+        <dl>
+            {#
+            <dt>First payment</dt>
+                <dd>{{ object.payments[-1].date_time.strftime("%d.%m.%Y") }}</dd>
+            <dt>Last payment</dt>
+                <dd>{{ object.payments[0].date_time.strftime("%d.%m.%Y") }}</dd>
+            #}
+            <dt>Actual fee</dt>
+                <dd>{{ object.actual_daily_fee }}&nbsp;{{ object.currency }} a day</dd>
+                <dd>{{ object.actual_monthly_fee }}&nbsp;{{ object.currency }} a month</dd>
+            <dt>Total {% if object.actual_total_fee < 0 %}spent{% else %}earned{% endif %}</dt>
+                <dd>{{ object.actual_total_fee }}&nbsp;{{ object.currency }}</dd>
+                {# FIXME what if payments include other currencies? #}
+        </dl>
+    </p>
+
+    {% endif %}
+
+    {#<p>{{ object.describe_recurrence() }}</p>#}
+    {% if object.dates_rrule %}
+        <p>Plan: <em>{{ object.dates_rrule_text }}</em>.</p>
+        <p>Next: <strong>{{ object.next_date_time.strftime("%A, %d %B %Y") }}</strong>.</p>
+        {{ object.days_since_last_event }}
+        {{ object.days_to_next_event }}
+    {% endif %}
+    
+    {% if object.details %}
+        <div>{{ object.details|urlize(40, true) }}</div>
+    {% endif %}
+</div>
+
+<div style="float: left; width: 48%">
+    <table>
+        <tr>
+            <th>date</th>
+            <th>amount</th>
+            <th>summary</th>
+            <th>balance</th>
+        </tr>
+    {% for event in object.payments %}
+        <tr>
+            <td>{{ event.date_time.strftime("%d %b %Y") }}</td>
+            <td class="money" style="text-align: right"><nobr>{{ event.amount }}&nbsp;{{ event.currency }}</nobr></td>
+            <td>{{ event.summary }}
+            </td>
+            <td>
+                {% if event.balance is not none %}
+                    {{ event.balance }}
+                {% endif %}
+            </td>
+        <tr>
+
+        {% if event.details %}
+        <tr>
+            <td colspan="4" style="text-align: right;
+            font-size: 0.8em; padding-top: 0">
+                {{ event.details|urlize(40, true) }}
+            </td>
+        </tr>
+        {% endif %}
+    {% endfor %}
+    </table>
+</div>
+
+{% endblock content %}

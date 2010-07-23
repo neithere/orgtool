@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Contracts
+{% endblock %}
+
+{% block head %}
+<style type="text/css">
+.money { text-align:right; font-weight: bold; }
+.income { color: green }
+.expense { color: red }
+.outdated { color: gray; background: #ddd}
+.outdated a { color: gray }
+</style>
+{% endblock head %}
+
+{% block heading %}
+    Contracts ({{ object_list.count() }})
+{% endblock %}
+
+{% block content %}
+
+<p><a href="{{ admin_url_for_query(object_list, namespace='finances') }}">View in admin</a></p>
+
+
+{#
+<p>Spending a total of {{ total_monthly_fee }} per month. 
+   Um, it's avg, not median.
+   Ugh, and it's just a dumb sum regardless of the currency. Hm.
+</p>
+#}
+
+<table style="border:1px solid gray;">
+    <tr>
+        <th>Expected daily fee</th>
+        <th>Daily fee</th>
+        <th>Monthly fee</th>
+        <th>Total fee</th>
+        <th>Summary</th>
+        <th>Valid since</th>
+        <th>Valid until</th>
+        <th>Repeating rule</th>
+        <th>Last payment</th>
+        <th>Next payment</th>
+        <th>Fee</th>
+{#        <th>Events</th> #}
+    </tr>
+{% for plan in object_list %}
+    <tr class="{% if not plan.is_active() %}outdated{% endif %}">
+        <td class="money">{{ plan.daily_fee|float('—') }}</td>
+        <td class="money">{{ plan.actual_daily_fee|float('—') }}</td>
+        <td class="money">{{ plan.actual_monthly_fee|float('—') }}</td>
+        <td class="money {{ 'income' if plan.actual_total_fee > 0 else 'expense' }}">
+            {{plan.actual_total_fee|float|replace('-','−') }} {{ plan.currency }}</td>
+        <td><a href="{{ url_for('orgtool.ext.finances.plan', pk=plan.pk) }}">{{ plan.summary }}</a></td>
+        <td>{{ plan.valid_since.strftime("%d %b %Y") if plan.valid_since else "—" }}</td>
+        <td>{{ plan.valid_until.strftime("%d %b %Y") if plan.valid_until else "—"  }}</td>
+        <td>{{ plan.dates_rrule_text }}</td>
+        <td>{{ plan.payments.0.date_time.strftime("%d %b %Y") if plan.payments else "not yet" }}</td>
+        <td>{{ plan.next_date_time.strftime("%d %b %Y") if plan.next_date_time else "not planned" }}</td>
+        <td class="money {{ 'income' if plan.fee > 0 else 'expense' }}">
+            {{ plan.fee|float|replace('-','−') }} {{ plan.currency }}</td>
+{# TODO: count events (must be cached and updated with signals cz too slow) #}
+{#        <td>{{ plan.get_events().count() }}</td> #}
+    </tr>
+{% endfor %}
+</table>
+
+{% endblock content %}

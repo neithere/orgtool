@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Payments Timeline
+{% endblock %}
+
+{% block head %}
+<style type="text/css">
+.amount { text-align: right }
+.expense { color: red }
+.income { color: green }
+</style>
+{% endblock %}
+
+{% block heading %}
+    Payments ({{ object_list.count() }})
+{% endblock %}
+
+{% block content %}
+
+<table style="border:1px solid gray;">
+{% for event in object_list %}
+    <tr>
+        <td>{{ event.date_time.strftime("%d.%m.%Y %H:%M").replace(" ","&nbsp;") }}</td><!-- &mdash; -->
+        <td class="amount {% if event.amount < 0 %}expense{% else %}income{% endif %}">
+            {{ event.amount }}
+        </td>
+        <td>
+            {{ event.currency }}
+        </td>
+        <td>
+    {% if event.plan %}
+        <strong><a href="{{ url_for("orgtool.ext.finances.views.plan", pk=event.plan.pk) }}">{{ event.plan }}</a></strong>
+        {#
+        {% if event.plan.is_recurrent() %}
+            ({{ event.plan.describe_recurrence() }})
+        {% endif %}
+        #}
+    {% endif %}
+        </td>
+        <td><strong>{{ event.summary|escape }}</strong></td>
+    {#
+    {% if event.silent_alarm_datetime %}
+        Remind on: {{ event.silent_alarm_datetime }} (silent)
+    {% endif %}
+        </td>
+        <td>
+    {% if event.tone_alarm_datetime %}
+        Remind on: {{ event.tone_alarm_datetime }} (alarm)
+    {% endif %}
+        </td>
+    #}
+{#    <dd>{{ event }}</dd> #}
+    </tr>
+{% endfor %}
+</table>
+
+{% endblock content %}
