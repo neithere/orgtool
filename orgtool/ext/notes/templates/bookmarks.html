@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form action="." method="GET">
+    <input type="text" name="q" value=""/>
+    <input type="submit"/>
+</form>
+
+<p>Got {{ object_list|count }} items:</p>
+
+<dl>
+{% for obj in object_list %}
+    <dt><a href="{{ obj.url }}">{{ obj.summary }}</a></dt>
+    <dd>{{ obj.details }}</dd>
+    <dd>
+        {% for tag in obj.tags %}
+            <a href="{{ url_for('orgtool.ext.notes.bookmark_index', tag=tag) }}">{{ tag }}</a>
+        {% endfor %}
+        {{ obj.date_time.strftime("%d %b %Y") }}
+    </dd>
+{% endfor %}
+</dl>
+
+{% endblock content %}

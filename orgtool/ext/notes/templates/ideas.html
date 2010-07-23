@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form action="." method="GET">
+    <input type="text" name="q" value=""/>
+    <input type="submit"/>
+</form>
+
+<div style="overflow: hidden;">
+
+    <dl style="float: right; width: 20ex; background: #eee;">
+        <dt>Reviewed?</dt>
+            <dd><a href="?is_reviewed=1">yes</a></dd>
+            <dd><a href="?is_reviewed=0">no</a></dd>
+            <dd><a href="?">any</a></dd>
+        <dt>Needed?</dt>
+            <dd><a href="?is_needed=1">yes</a></dd>
+            <dd><a href="?is_needed=0">no</a></dd>
+            <dd><a href="?">any</a></dd>
+    </dl>
+
+    <p>Got {{ object_list|count }} items:</p>
+
+    <ul>
+    {% for obj in object_list %}
+        <li>{{ obj.summary }}</li>
+    {% endfor %}
+    </ul>
+
+<div>
+
+{% endblock content %}
