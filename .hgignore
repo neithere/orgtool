@@ -2,9 +2,13 @@
 
 ~$
 \.swp$
+^tmp_
 
 # dist-specific files
 
+^build/
+^dist/
+\.egg-info
+
 \.pyc$
 \.pyo$
-
