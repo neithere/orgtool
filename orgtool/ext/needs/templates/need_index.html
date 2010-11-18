@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style type="text/css">
+a.need { color: #002E63}
+a.need.important { border-bottom: 1px solid #F0DC82; text-decoration:none }
+a.need.satisfied { color: #85BB65; }
+a.need.discarded { color: gray; }
+</style>
+{% endblock head %}
+
+{% block content %}
+
+<p><a href="{{ admin_url_for_query(object_list, namespace='tasks') }}">View in admin</a></p>
+
+<p><a href="{{ url_for('devel_tasks.add_need') }}">Add a need</a></p>
+
+<p>There are {{ object_list|count }} needs.</p>
+
+{% set unprocessed = object_list.where(is_processed=False) %}
+{% if unprocessed %}
+    <h2>Unprocessed needs</h2>
+    <p>(BTW, WTF? :)</p>
+    <ul>
+    {% for need in unprocessed %}
+        <li><a href="{{ url_for('devel_tasks.need', pk=need.pk) }}">{{ need }}</a></li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+<h2>Current needs 
+    ({{ object_list.where(is_processed=True, is_satisfied=False, is_discarded=False).count() }})</h2>
+
+<ul>
+{% for need in object_list %}
+    {% if need.is_active() %}
+    <li>
+        {#% if need.project %}
+            <a href="{{ url_for('devel_tasks.project', pk=need.project.pk) }}">{{ need.project }}</a>:
+        {% endif %#}
+        {% if need.stakeholders %}
+            {{ need.stakeholders|join(', ') }} &mdash;
+        {% endif %}
+        <a href="{{ url_for('devel_tasks.need', pk=need.pk) }}" 
+        class="important need">
+        {{ need }}</a>
+    </li>
+    {% endif %}
+{% endfor %}
+</ul>
+
+<h2>Satisfied needs
+    ({{ object_list.where(is_satisfied=True).count() }})</h2>
+
+{% for need in object_list %}
+    {% if need.is_satisfied %}
+        <a href="{{ url_for('devel_tasks.need', pk=need.pk) }}"
+           class="satisfied need">{{ need }}</a>,
+    {% endif %}
+{% endfor %} here we are!
+
+<h2>Discarded needs
+    ({{ object_list.where(is_discarded=True).count() }})</h2>
+
+{% for need in object_list %}
+    {% if need.is_discarded %}
+        <a href="{{ url_for('devel_tasks.need', pk=need.pk) }}"
+           class="discarded need">{{ need }}</a>,
+    {% endif %}
+{% endfor %} nuff said.
+
+{% endblock content %}

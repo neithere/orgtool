@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style type="text/css">
+a.need.satisfied { color: lightgreen; text-decoration: line-through }
+a.need.discarded { color: gray; text-decoration: line-through }
+a.plan.inactive { color: gray; text-decoration: line-through }
+</style>
+{% endblock head %}
+
+{% block content %}
+
+<p><a href="{{ admin_url_for(object, 'tasks') }}">View in admin</a></p>
+
+{#<p>{{ object.details|urlize|replace("\n","<br/>") }}</p>#}
+
+<h2>Stakeholders</h2>
+
+<ul>
+{% for actor in object.stakeholders %}
+    <li><a href="{{ url_for('orgtool.ext.contacts.person', 
+                            pk=actor.pk) }}">{{ actor }}</a></li>
+{% endfor %}
+</ul>
+
+{% if object.needs %}
+
+<h2>Needs</h2>
+
+    <ul>
+    {% for need in object.needs %}
+        <li>
+            <a href="{{ url_for('devel_tasks.need', 
+                                pk=need.pk) }}"
+                class="need
+                    {% if need.is_satisfied %}satisfied{% endif %}
+                    {% if need.is_discarded %}discarded{% endif %}
+            ">{{ need }}</a>
+
+            {% if need.stakeholders %}(stakeholders: {{ need.stakeholders|join(', ') }}){% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+
+{% else %}
+    
+    <p>Now specify the stakeholders' needs to move the project further.</p>
+
+{% endif %}
+
+{% if object.get_plans() %}
+    <h2>Plans</h2>
+
+    </ul>
+    {% for plan in object.get_plans() %}
+        <li>
+            <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}" 
+               class="plan {% if not plan.is_active() %}inactive{% endif %}">{{ plan }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+{% endblock content %}

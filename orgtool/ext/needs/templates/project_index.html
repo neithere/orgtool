@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style type="text/css">
+</style>
+{% endblock head %}
+
+{% block content %}
+
+<p><a href="{{ admin_url_for_query(object_list, namespace='tasks') }}">View in admin</a></p>
+
+<p>There are {{ object_list|count }} projects.</p>
+
+<h2>Current projects</h2>
+
+<ul>
+{% for project in object_list %}
+    <li>{% if not project.is_active() %}(?){% endif %}
+        <a href="{{ url_for('devel_tasks.project', pk=project.pk) }}">{{ project }}</a>
+        {% if project.is_active() %}
+            —
+            {% if project.stakeholders %}
+                {{ project.stakeholders|count }}
+            {% else %}
+                no known
+            {% endif %}
+            stakeholders,
+            {% if project.needs %}
+                {{ project.needs|count }}
+            {% else %}
+                no known
+            {% endif %} 
+            needs,
+            {% if project.get_plans() %} {# FIXME cache #}
+                {{ project.get_plans().count() }}
+            {% else %}
+                no
+            {% endif %}
+            plans.
+        {% endif %}
+    </li>
+{% endfor %}
+</ul>
+
+{#
+<ul>
+{% for project in object_list %}
+    <li>
+        <h3>{% if not project.is_active() %}INACTIVE{% endif %}
+            <a href="{{ url_for('devel_tasks.project', pk=project.pk) }}">{{ project }}</a>
+        </h3>
+        {% if project.is_active() %}
+            {% if project.stakeholders %}
+                <p>Stakeholders:
+                {% for actor in project.stakeholders %}
+                    <a href="{{ url_for('orgtool.ext.contacts.person',
+                                        pk=actor.pk) }}">{{ actor }}</a>
+                    {%- if not loop.last %},{% endif %}
+                {% endfor %}
+                </p>
+            {% endif %}
+            {% if project.needs %}
+                {{ project.needs|count }} need(s).
+            {% endif %}
+            {% if project.get_plans() %} {XXX# FIXME cache #XXX}
+                <p>{{ project.get_plans().count() }} plan(s).</p>
+                {XXX#
+                <p>Plans:
+                {% for plan in project.get_plans() %}
+                    <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}"
+                       style="{% if not plan.is_active() %}text-decoration:
+                       line-through{% endif %}">{{ plan }}</a>
+                    {%- if not loop.last %},{% endif %}
+                {% endfor %}
+                </p>
+                #XXX}
+            {% endif %}
+        {% endif %}
+    </li>
+{% endfor %}
+</ul>
+#}
+
+{% endblock content %}

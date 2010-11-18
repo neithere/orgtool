@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style type="text/css">
+p.outcome {}
+p.outcome a { font-size: 1.5em }
+
+.plan.accomplished, 
+.plan.accomplished a,
+.plan.cancelled,
+.plan.cancelled a { text-decoration: line-through; color: #aaa }
+.plan.accomplished a { color: #85BB65 }
+.plan.todo, 
+.plan.todo a { color: #002E63 }
+
+.stamp {
+    float: left;
+    font-weight: normal; 
+    font-size: 1.4em; 
+    color: gray;
+    -webkit-transform: rotate(-5deg); 
+    -moz-transform: rotate(-5deg);
+    -webkit-border-radius: 0.2em;
+    -moz-border-radius: 0.2em;
+    border: 1px solid gray;
+    margin: 2em;
+    padding: 0.5em
+}
+.stamp.ok {
+    color: #556B2F;
+    border-color: #556B2F;
+}
+.stamp.future {
+    color: #FFA812;
+    border-color: #FFA812;
+}
+.stamp.stalled {
+    color: orange;
+    border-color: orange;
+}
+.stamp.expired {
+    color: red;
+    border-color: red;
+}
+
+div.event {
+    margin: 0.5em 0 1em 0;
+    padding: 0 0 0 2ex;
+    border-left: 0.5ex solid #ccc;
+}
+
+</style>
+{% endblock head %}
+
+{% block content %}
+
+<p><a href="{{ admin_url_for(object, 'events') }}">View in admin</a></p>
+
+<div style="float: right; width: 48%;">
+
+    {% if outcome %}
+        <p class="outcome">Outcome: 
+            <a href="{{ url_for('devel_tasks.need', pk=outcome.pk) }}">
+                {{ outcome }}</a></p>
+    {% endif %}
+
+    {% if object.is_accomplished %}
+        <div style="overflow: hidden;">
+            <p class="stamp ok">Accomplished! :)</p>
+        </div>
+    {% else %}
+        {% if object.is_future() %}
+            <div style="overflow: hidden;">
+                <p class="stamp future">
+                    Starts {{ render_rel_delta(object.valid_since) }}
+                    <!--Starts in {{ object.valid_since.strftime("%b %Y") }}-->
+                    </p>
+            </div>
+        {% endif %}
+        {% if object.is_stalled() %}
+            <div style="overflow: hidden;">
+                <p class="stamp stalled">Stalled!</p>
+            </div>
+        {% endif %}
+        {% if object.is_expired() %}
+            <div style="overflow: hidden;">
+                <p class="stamp expired">
+                    Expired in {{ object.valid_until.strftime("%b %Y") }}</p>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    {% if total_duration %}
+        <p>Time spent: {{ total_duration }}.</p>
+    {% endif %}
+
+    {% if total_amount %}
+        <p>Money earned/spent: {{ total_amount }} (in default currency).</p>
+    {% endif %}
+
+    {% if object._saved_state.data.stakeholder %}
+        <p>Заинтересованное лицо: {{ object._saved_state.data.stakeholder|urlize(40, true) }}</p>
+    {% endif %}
+   
+    {% if object.valid_since or object.valid_until %}
+        <p>Valid since {{ object.valid_since.strftime("%d.%m.%Y") if object.valid_since else "(unknown)" }} 
+                 until {{ object.valid_until.strftime("%d.%m.%Y") if object.valid_until else "forever" }}.</p>
+    {% else %}
+        <p>No time bounds.</p>
+    {% endif %}
+
+    {% if object.unlocks_plan %}
+        <p>Unlocks plan 
+            <a href="{{ url_for('devel_tasks.views.plan', 
+                                pk=object.unlocks_plan.pk) }}">{{ object.unlocks_plan }}</a>.</p>
+
+    {% endif %}
+
+    {% if object.depends_on %}
+        <h2>Do this first:</h2>
+        <ul>
+        {% for dep in object.depends_on %}
+            <li class="
+                plan 
+                {% if dep.is_active() %}todo{% endif %}
+                {% if dep.is_accomplished %}accomplished{% endif %}
+                {% if dep.is_cancelled() %}cancelled{% endif %}">
+                <a href="{{ url_for('devel_tasks.views.plan', pk=dep.pk) }}">{{ dep }}</a></li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    
+    {% if object.details %}
+        <div>{{ object.details|urlize(40, true) }}</div>
+    {% endif %}
+
+</div>
+
+
+<div style="float: left; width: 48%">    
+
+    {#<p>{{ object.describe_recurrence() }}</p>#}
+    {% if object.is_active() and object.next_date_time %}
+        <p>Plan: <em>{{ object.dates_rrule_text }}</em>.</p>
+        <p>Next: 
+           {{ object.next_date_time.strftime("%A, %d %B %Y") }},
+           <strong>{{ render_rel_delta(object.next_date_time) }}</strong>.</p>
+        {{ object.days_since_last_event }}
+        {{ object.days_to_next_event }}
+    {% endif %}
+
+    {% if object.events %}
+        {% if object.events|count == 1 %}
+            <p>One related event:</p>
+        {% else %}
+            <p>{{ object.events|count }} events between
+               {{ object.events[-1].date_time.strftime("%d.%m.%Y") }}
+               and
+               {{ object.events[0].date_time.strftime("%d.%m.%Y") }}:
+            </p>
+        {% endif %}
+    {% endif %}
+
+    {# RELATED EVENTS #}
+
+    {% set prev_dt = None %}
+    {% for event in object.events %}
+        {% if prev_dt != event.date_time.date() %}
+            {% set prev_dt = event.date_time.date() %}
+            <h2>{{ event.date_time.strftime("%d %b %Y") }}</h2>
+        {% endif %}
+    
+        <div class="event">
+        {% if event._saved_state.data['sent_by'] %}
+            <p style="font-size: 0.8em;">
+                from {{ event._saved_state.data['sent_by'] }}
+                to {{ event._saved_state.data['sent_to'] }}</p>
+        {% endif %}
+        <p>{{ event.summary }}
+            {% if event.details %}
+            <span style="font-size: 0.8em;">
+                {{ event.details.replace("\n","<br/>") }}
+            </span>
+            {% endif %}
+        </p>
+        {% if event._saved_state.data['amount'] %}
+            <p style="font-size: 0.8em; font-weight: bold;">
+                {{ event._saved_state.data['amount'] }} 
+                {{ event._saved_state.data['currency'] }}</p>
+        {% endif %}
+        {% if event.get_duration() %}
+            <p style="font-size: 0.8em;">duration: {{ event.get_duration() }}</p>
+        {% endif %}
+        (<a href="{{ url_for('tool.ext.admin.object_detail',
+        namespace='events', model_name='Event', pk=event.pk) }}">admin</a>)
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock content %}

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style type="text/css">
+.inactive { color: gray; background: #ddd}
+.inactive a { color: gray }
+.active.has-deadline { background: #fae7b5 }
+
+ul.upcoming { list-style: none; }
+ul.upcoming li { 
+    margin: 0; 
+    padding: 0.2em 0.5ex; 
+    border-left: 1ex solid transparent; 
+    font-size: 1.2em 
+}
+ul.upcoming li.today { border-left-color: #F0DC82; font-size: 1.4em }
+ul.upcoming li a { color: #996515 }
+ul.upcoming li.today a { color: black }
+ul.upcoming li span.date { padding: 0.1em 0.5ex; background: #ffd12a; font-size: 0.8em }
+ul.upcoming li.unconditional a { color: #996515; font-size: 0.7em }
+ul.upcoming li.unconditional span.date { background: transparent /*#FAE7B5*/ }
+ul.upcoming li.overdue a { color: #b22222 }
+ul.upcoming li.overdue span.date { background: #fe6f5e }
+ul.upcoming li span { -webkit-border-radius: 2px }
+</style>
+{% endblock head %}
+
+{% block content %}
+
+<p><a href="{{ admin_url_for_query(object_list, namespace='events') }}">View in admin</a></p>
+
+<div style="overflow: hidden;">
+
+    <div style="float: left; width: 49%">
+    
+        <h2>Конечные сроки</h2>
+
+        <ul class="upcoming">
+        {% for plan in object_list.where_not(valid_until__in=[None]).order_by('valid_until') %}
+            {% if plan.is_active() %}
+                <li><span class="date">{{ render_rel_delta(plan.valid_until) }}</span>
+                    <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}">{{ plan }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+
+        <h2>Намеченные старты</h2>
+
+        <ul class="upcoming">
+        {% for plan in object_list.where_not(valid_since__in=[None]).order_by('valid_since') %}
+            {% if plan.is_stalled() and not plan.skip_past_events %}
+                <li><span class="date">{{ render_rel_delta(plan.valid_since) }}</span>
+                    <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}">{{ plan }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+
+    </div>
+
+    <div style="float: right; width: 49%">
+        
+        <h2>Текущие планы</h2>
+
+        <ul class="upcoming">
+        {% for plan in object_list.where_not(next_date_time=None,
+                                             is_accomplished=True).order_by('next_date_time') %}
+            {#% if plan.is_active() %#}
+                <li class="
+                    {% if plan.skip_past_events %}unconditional{% endif %}
+                    {% if plan.is_next_event_overdue() %}overdue{% endif %}
+                    {% if is_date_within_a_day(plan.next_date_time) %}today{% endif %}
+                ">
+                    <span class="date">{{ render_rel_delta(plan.next_date_time) }}</span>
+                    {% if plan.next_date_time.time() and is_date_within_a_day(plan.next_date_time) %}
+                        <span class="date">{{ plan.next_date_time.strftime("%H:%M") }}</span>
+                    {% endif %}
+                    <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}">{{ plan }}</a>
+                </li>
+            {#% endif %#}
+        {% endfor %}
+        </ul>
+
+    </div>
+
+</div>
+
+<h2>Остальное</h2>
+
+<ul style="overflow: hidden;">
+{% for plan in object_list.where(unlocks_plan__in=[None]) %}
+    <li style="float: left; margin-left: 4ex;">
+        <a href="{{ url_for('devel_tasks.views.plan', pk=plan.pk) }}"
+           class="{% if plan.is_active() %}active{% else %}inactive{% endif %}
+                  {% if plan.valid_until %}has-deadline{% endif %}">
+        {{ plan }} 
+        {#% if plan.blocked_by.count() %}
+            (blocked by {{ plan.blocked_by.count() }} other plans)
+        {% endif %#}
+        </a>
+    </li>
+{% endfor %}
+</ul>
+
+{#
+<p>Spending a total of {{ total_monthly_fee }} per month. 
+   Um, it's avg, not median.
+   Ugh, and it's just a dumb sum regardless of the currency. Hm.
+</p>
+#}
+
+{#
+<dl>
+{% for plan in object_list.where(unlocks_plan__in=[None]) %}
+    <dt class="{% if not plan.is_active() %}outdated{% endif %}">
+        <h2><a href="{{ url_for('devel_tasks.views.plan', pk=plan.pk) }}">{{ plan }}</a></h2>
+    </dt>
+    {% if plan.is_active() %}
+    <dd>
+        requires: 
+        <ul>
+        {% for dep in object_list.where(unlocks_plan=plan.pk) %}
+            <li><a href="{{ url_for('devel_tasks.views.plan', pk=dep.pk)}}">{{ dep }}</a></li>
+        {% endfor %}
+        </ul>
+    </dd>
+    {% endif %}
+{% endfor %}
+</dl>
+#}
+
+{% endblock content %}

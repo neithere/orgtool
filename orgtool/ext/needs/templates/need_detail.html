@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style type="text/css">
+.stamp {
+    float: left;
+    font-weight: normal; 
+    font-size: 1.4em; 
+    color: gray;
+    -webkit-transform: rotate(-5deg); 
+    -moz-transform: rotate(-5deg);
+    -webkit-border-radius: 0.2em;
+    -moz-border-radius: 0.2em;
+    border: 1px solid gray;
+    margin: 2em;
+    padding: 0.5em
+}
+.stamp.satisfied {
+    color: #556B2F;
+    border-color: #556B2F;
+}
+.stamp.unsatisfied {
+    color: orange;
+    border-color: orange;
+}
+.stamp.unconfirmed {
+    color: red;
+    border-color: red;
+}
+
+a.plan {
+    color: navy;
+}
+a.plan.inactive {
+    color: gray;
+    text-decoration: line-through;
+}
+
+</style>
+{% endblock head %}
+
+{% block content %}
+
+<p><a href="{{ admin_url_for(object, 'tasks') }}">View in admin</a></p>
+
+        <div style="overflow: hidden;">
+        {% if object.is_satisfied %}
+            <p class="stamp satisfied">Accomplished! :)</p>
+        {% else %}
+            {% if object.is_processed %}
+                <p class="stamp unsatisfied">Not satisfied</p>
+            {% else %}
+                <p class="stamp unimportant">Decision needed</p>
+            {% endif %}
+        {% endif %}
+        </div>
+
+{% if object.stakeholders %}
+    <p>Stakeholders: 
+        {% for actor in object.stakeholders %}
+            <a href="{{ url_for('orgtool.ext.contacts.person',
+                                pk=actor.pk) }}">{{ actor }}</a>
+            {%- if not loop.last %},{% endif %}
+        {% endfor %}
+    </p>
+{% endif %}
+
+<h2>Project</h2>
+
+<p>
+    {% for project in object.get_projects() %}
+        <a href="{{ url_for('devel_tasks.project', pk=project.pk) }}">{{ project }}</a>
+    {% endfor %}
+</p>
+
+<p>{{ object.details|urlize|replace("\n","<br/>") }}</p>
+
+<h2>Plans</h2>
+
+</ul>
+{% for plan in object.get_plans() %}
+    <li>
+        <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}" 
+           class="plan {% if not plan.is_active() %}inactive{% endif %}">{{ plan }}</a>
+    </li>
+{% endfor %}
+</ul>
+
+<h2>Events</h2>
+
+<p>Unplanned activities directly associated with this need. See plans for pre-planned activities.</p>
+
+</ul>
+{% for event in object.get_events() %}
+    <li>{{ event }}
+{#        <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}" 
+           class="plan {% if not plan.is_active() %}inactive{% endif %}">{{ plan }}</a>
+#}
+    </li>
+{% endfor %}
+</ul>
+
+{% endblock content %}
