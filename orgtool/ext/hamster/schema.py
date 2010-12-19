@@ -1,4 +1,4 @@
-from docu import Field as f
+from doqu import Field as f
 from orgtool.ext.events import Event
 
 
