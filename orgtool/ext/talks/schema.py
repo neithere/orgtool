@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-from docu import Document, Field as f
+from doqu import Document, Field as f
 from tool.ext import admin
 from orgtool.ext.events import Event
 

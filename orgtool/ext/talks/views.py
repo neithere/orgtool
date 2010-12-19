@@ -4,7 +4,7 @@ import calendar
 
 from tool.routing import url
 from tool.ext.breadcrumbs import entitled
-from tool.ext.documents import db
+from tool.ext.documents import default_storage
 from tool.ext.templating import as_html
 
 from schema import Message
@@ -26,6 +26,7 @@ def _get_month_name(number):
                                kw.get('year') or u'Messages'))
 @as_html('talks/message_index.html')
 def message_index(request, year=None, month=None, day=None):
+    db = default_storage()
     messages = Message.objects(db).order_by('date_time', reverse=True)
     if year:
         messages = messages.where(date_time__year=year)
