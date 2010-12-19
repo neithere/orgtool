@@ -4,11 +4,15 @@ import datetime
 from dateutil.rrule import rrule
 from werkzeug import cached_property
 
-from docu import Document, Field as f
-from docu import validators
+from doqu import Document, Field as f
+from doqu import validators
 
 from orgtool.ext.tracking import TrackedDocument
-from orgtool.utils.dates import informal_rrule
+
+def informal_rrule(*args, **kwargs):
+    "A wrapper for informal_rrule that does lazy import"
+    from orgtool.utils.dates import informal_rrule
+    return informal_rrule(*args, **kwargs)
 
 
 class Plan(TrackedDocument):
@@ -20,12 +24,16 @@ class Plan(TrackedDocument):
     # TODO: dates_rrule = f(rrule, essential=True, pickled=True)
     dates_rrule = f(rrule, pickled=True)
 
+    # accuracy = ...
+
     # OLD FIELDS, TO BE PUSHED TO RRULE AND THEN DELETED
     # нам, в сущности, не надо дату начала -- достаточно самих фактов.
     valid_since = f(datetime.date, essential=True)  # None, если неопр. срок
     # дата окончания нужна ли? все равно генерится только один факт обычно.
     # или хочется именно прогнозировать полные затраты? а это возможно ли,
     # вообще? мб лучше оставить для более конкретных и полных документов
+    # NOTE: not "valid through" but "valid through the day before this";
+    # another name would be "invalid_since":
     valid_until = f(datetime.date, essential=True)  # None, если неопр. срок
     #repeat_frequency = f(int, default=1)
     #repeat_month = f(int)
@@ -35,11 +43,17 @@ class Plan(TrackedDocument):
 
     # cancelled: valid_until(cancelling date) + is_accomplished = False
 
+    # events like birthdays do not require our confirmation; they just happen.
+    # so the system should skip them instead of waiting for us to confirm and
+    # "materialize" these plans as event reports.
+    skip_past_events = f(bool, default=False)
+
     def __unicode__(self):
         return u'{summary}'.format(**self)
 
     def save(self, *args, **kwargs):
-        fields = 'dates_rrule_text', 'valid_since', 'valid_until'
+        fields = ('dates_rrule_text', 'next_date_time',
+                  'valid_since', 'valid_until')
         if any(self.is_field_changed(x) for x in fields):
             self.update_dates_rrule()
         return super(Plan, self).save(*args, **kwargs)
@@ -49,45 +63,115 @@ class Plan(TrackedDocument):
         # apart from the straightforward logic. Facts will *not* fit the plans
         # most of the time.
         if self.dates_rrule_text:
-            print 'text defined'
-            self.dates_rrule = informal_rrule(
-                self.dates_rrule_text,
-                since = self.valid_since,
+
+            # FIXME HACK
+            if self.dates_rrule_text.startswith('once '):
+                rrule_text = self.dates_rrule_text.replace('once ', 'every ')
+            else:
+                rrule_text = self.dates_rrule_text
+
+            #print 'text defined'
+
+            # looks like rrule will pick now() if valid_since is None even if
+            # after(x) is given, so we pass the first event date in this case
+            since = self.valid_since or (
+                self.events.order_by('date_time')[0].date_time if self.events else None)
+            self.dates_rrule = informal_rrule(rrule_text,
+                since = since,
                 until = self.valid_until
             )
-            print 'rrule created'
-            if not last_event and self.get_events:
-                print 'no explicit last event but there are some'
+            #print 'rrule created'
+            if not last_event and self.events:
+                #print 'no explicit last event but there are some'
                 # XXX NOTE: assumed that payments are sorted by date DESC (most
                 # recent on top):
                 last_event = self.events[0]
             if last_event:
-                print 'got explicit last event', last_event
+                #print 'got explicit last event', last_event
                 self.next_date_time = self.dates_rrule.after(last_event.date_time)
+            elif self.skip_past_events:
+                now = datetime.datetime.utcnow()  # or better yesterday?
+                self.next_date_time = self.dates_rrule.after(now)
             else:
-                print 'no last event at all, picking 1st rrule event'
-                self.next_date_time = self.dates_rrule[0]
+                #print 'no last event at all, picking 1st rrule event'
+                try:
+                    self.next_date_time = self.dates_rrule[0]
+                except IndexError:
+                    self.next_date_time = None
+
+            # FIXME HACK
+            if self.dates_rrule_text.startswith('once '):
+                self.dates_rrule = None
         else:
-            'no rrule text'
+            #print 'no rrule text'
             self.dates_rrule = self.next_date_time = None
+            if self.valid_until:
+                self.next_date_time = datetime.datetime.combine(
+                    self.valid_until, datetime.time())
 
     def is_active(self):
-        today = datetime.date.today()
-        if self.valid_since and today < self.valid_since:
-            return False
-        if self.valid_until and self.valid_until < today:
-            return False
-        if self.is_accomplished:
+        if self.is_accomplished or self.is_future() or self.is_expired():
             return False
         return True
+
+    def is_stalled(self):
+        """
+        Returns True if this plan is valid but no related events have been
+        recorded yet. This usually means that something is not clear about the
+        plan so the work can't start at this point.
+
+        The "stalled" status is a shade of "active", not an alternative.
+        """
+        if self.is_active():
+            if self.events is None or not self.events.count():
+                return True
+        return False
+
+    def is_future(self):
+        today = datetime.datetime.now().date()
+        if self.valid_since and today < self.valid_since:
+            return True
+        return False
+
+    def is_expired(self):
+        """
+        Returns True if this plan is expired.
+
+        .. note::
+
+            "valid_until" is interpreted as "invalid_since".
+
+        """
+        today = datetime.datetime.utcnow().date()
+        if self.valid_until and self.valid_until <= today:
+            return True
+        return False
+
+    def is_cancelled(self):
+        """
+        Returns True is this plan is inactive, not accomplished and not in
+        the future.
+        """
+        today = datetime.datetime.utcnow().date()
+        if not self.is_active():
+            if not self.is_accomplished and self.valid_since < today:
+                return True
+        return False
 
     @cached_property
     def events(self):
         return self.get_events()
 
     def get_events(self):
+        if not self.pk:
+            return None
         all_events = Event.objects(self._saved_state.storage)
         return all_events.where(plan=self).order_by('date_time', reverse=True)
+
+    def is_next_event_overdue(self):
+        if self.next_date_time < datetime.datetime.utcnow():
+            return True
+
 #admin.register(Plan, namespace=NAMESPACE, exclude=['dates_rrule'])
 
 class PlanCategory(Document):
@@ -97,7 +181,18 @@ class PlanCategory(Document):
 class CategorizedPlan(Plan):
     category = f(PlanCategory, required=True)
 class HierarchicalPlan(Plan):
-    unlocks_plan = f('self', essential=True)
+    unlocks_plan = f(Plan, essential=True)    # not 'self': any plan will do
+
+    @cached_property
+    def depends_on(self):
+        db = self._saved_state.storage
+        return self.__class__.objects(db).where(unlocks_plan=self)
+
+    @cached_property
+    def blocked_by(self):
+        today = datetime.date.today()
+        valid = self.depends_on.where_not(valid_until__lte=today)
+        return valid.where(is_accomplished=False)
 
 '''
 
@@ -169,7 +264,7 @@ class OLD__Plan(Document):
         else:
             assert self.valid_since
             prev_dt = datetime.combine(self.valid_since, datetime.time(0))
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         dt = prev_dt
         delta_days = (self.repeat_day or 0) + (30*(self.repeat_month or 0))
         delta = datetime.timedelta(days=delta_days)
@@ -180,6 +275,10 @@ class OLD__Plan(Document):
 '''
 
 class Event(TrackedDocument):
+    """
+    Event record. Planned events are known as "plans". Actual events —
+    confirmed facts — are known as "events".
+    """
     # I think we don't really want prototyping.
     # So there should be concrete "events" and abstract "plans".
     # An event cannot contain recurrence information.
