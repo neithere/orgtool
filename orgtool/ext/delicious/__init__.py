@@ -1,7 +1,11 @@
 """
-Delicious extension
-===================
+Bookmarks: del.icio.us
+======================
 
 Integration with delicious.com.
 """
-import commands
+from commands import import_dump
+
+def delicious(app, conf):
+    return
+delicious.commands = [import_dump]

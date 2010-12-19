@@ -6,18 +6,19 @@
 import datetime
 import os
 import xml.dom.minidom
-from docu import Document, Field as f
+from doqu import Document, Field as f
+from tool import app
 from tool.cli import command
-from tool.ext.documents import db
 from tool.ext.templating import register_templates
 from tool.ext import admin
 from orgtool.ext.notes.schema import Bookmark
 
 
-@command()
-def import_delicious_dump(path):
+@command
+def import_dump(path):
     "Imports an XML dump of all your bookmarks on delicious.com"
     assert os.path.exists(path)
+    db = app.get_feature('document_storage').default_db
     x = xml.dom.minidom.parse(path)
     posts = x.documentElement.getElementsByTagName('post')
     seen_cnt = saved_cnt = 0
