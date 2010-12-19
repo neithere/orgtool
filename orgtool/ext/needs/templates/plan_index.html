@@ -39,7 +39,7 @@ ul.upcoming li span { -webkit-border-radius: 2px }
         {% for plan in object_list.where_not(valid_until__in=[None]).order_by('valid_until') %}
             {% if plan.is_active() %}
                 <li><span class="date">{{ render_rel_delta(plan.valid_until) }}</span>
-                    <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}">{{ plan }}</a>
+                    <a href="{{ url_for('orgtool.ext.needs.views.plan', pk=plan.pk) }}">{{ plan }}</a>
                 </li>
             {% endif %}
         {% endfor %}
@@ -51,7 +51,7 @@ ul.upcoming li span { -webkit-border-radius: 2px }
         {% for plan in object_list.where_not(valid_since__in=[None]).order_by('valid_since') %}
             {% if plan.is_stalled() and not plan.skip_past_events %}
                 <li><span class="date">{{ render_rel_delta(plan.valid_since) }}</span>
-                    <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}">{{ plan }}</a>
+                    <a href="{{ url_for('orgtool.ext.needs.views.plan', pk=plan.pk) }}">{{ plan }}</a>
                 </li>
             {% endif %}
         {% endfor %}
@@ -76,7 +76,7 @@ ul.upcoming li span { -webkit-border-radius: 2px }
                     {% if plan.next_date_time.time() and is_date_within_a_day(plan.next_date_time) %}
                         <span class="date">{{ plan.next_date_time.strftime("%H:%M") }}</span>
                     {% endif %}
-                    <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}">{{ plan }}</a>
+                    <a href="{{ url_for('orgtool.ext.needs.views.plan', pk=plan.pk) }}">{{ plan }}</a>
                 </li>
             {#% endif %#}
         {% endfor %}
@@ -91,7 +91,7 @@ ul.upcoming li span { -webkit-border-radius: 2px }
 <ul style="overflow: hidden;">
 {% for plan in object_list.where(unlocks_plan__in=[None]) %}
     <li style="float: left; margin-left: 4ex;">
-        <a href="{{ url_for('devel_tasks.views.plan', pk=plan.pk) }}"
+        <a href="{{ url_for('orgtool.ext.needs.views.plan', pk=plan.pk) }}"
            class="{% if plan.is_active() %}active{% else %}inactive{% endif %}
                   {% if plan.valid_until %}has-deadline{% endif %}">
         {{ plan }} 
@@ -114,14 +114,14 @@ ul.upcoming li span { -webkit-border-radius: 2px }
 <dl>
 {% for plan in object_list.where(unlocks_plan__in=[None]) %}
     <dt class="{% if not plan.is_active() %}outdated{% endif %}">
-        <h2><a href="{{ url_for('devel_tasks.views.plan', pk=plan.pk) }}">{{ plan }}</a></h2>
+        <h2><a href="{{ url_for('orgtool.ext.needs.views.plan', pk=plan.pk) }}">{{ plan }}</a></h2>
     </dt>
     {% if plan.is_active() %}
     <dd>
         requires: 
         <ul>
         {% for dep in object_list.where(unlocks_plan=plan.pk) %}
-            <li><a href="{{ url_for('devel_tasks.views.plan', pk=dep.pk)}}">{{ dep }}</a></li>
+            <li><a href="{{ url_for('orgtool.ext.needs.views.plan', pk=dep.pk)}}">{{ dep }}</a></li>
         {% endfor %}
         </ul>
     </dd>

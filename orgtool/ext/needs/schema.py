@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from docu import Field as f, Many
+from doqu import Field as f, Many
 
 from orgtool.ext.tracking import TrackedDocument
 #from orgtool.ext.events.schema import HierarchicalPlan as Plan, Event
-from orgtool.ext.contacts.schema import Actor
+from orgtool.ext.actors.schema import Actor
 from orgtool.ext.events.schema import HierarchicalPlan, Plan, Event
+
+
+__all__ = [
+    'SystemUnderDevelopment', 'Need', 'Feature',
+    'ReasonedPlan', 'ReasonedEvent',
+]
 
 
 class Need(TrackedDocument):  # потребность

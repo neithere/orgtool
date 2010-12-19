@@ -2,7 +2,7 @@
 
 import datetime
 
-from docu.validators import ValidationError
+from doqu.validators import ValidationError
 
 from tool.routing import url, redirect_to
 from tool.ext.who import requires_auth
@@ -39,7 +39,7 @@ def dashboard(request):
 @url('/projects/')
 @requires_auth
 @entitled(u'Projects')
-@as_html('devel_tasks/project_index.html')
+@as_html('needs/project_index.html')
 def project_index(request):
     db = default_storage()
     projects = SystemUnderDevelopment.objects(db).order_by('summary')
@@ -50,7 +50,7 @@ def project_index(request):
 @url('/projects/<string:pk>')
 @requires_auth
 @entitled(lambda pk: u'{0}'.format(default_storage().get(SystemUnderDevelopment,pk)))
-@as_html('devel_tasks/project_detail.html')
+@as_html('needs/project_detail.html')
 def project(request, pk):
     db = default_storage()
     obj = db.get(SystemUnderDevelopment, pk)
@@ -62,7 +62,7 @@ def project(request, pk):
 @url('/needs/')
 @requires_auth
 @entitled(u'Needs')
-@as_html('devel_tasks/need_index.html')
+@as_html('needs/need_index.html')
 def need_index(request):
     db = default_storage()
     needs = Need.objects(db).order_by('summary')
@@ -73,13 +73,13 @@ def need_index(request):
 @url('/needs/add')
 @requires_auth
 @entitled(u'Add a need')
-@as_html('devel_tasks/add_need.html')
+@as_html('needs/add_need.html')
 def add_need(request):
     db = default_storage()
 
     ###
     import wtforms
-#    from docu.ext.forms import document_form_factory
+#    from doqu.ext.forms import document_form_factory
 #    BaseNeedForm = document_form_factory(Need, storage=db)
     class NeedForm(wtforms.Form):
         summary = wtforms.TextField('summary')
@@ -95,13 +95,13 @@ def add_need(request):
             obj = Need()
             form.populate_obj(obj)
             obj.save(db)
-            return redirect_to('devel_tasks.need', pk=obj.pk)
+            return redirect_to('needs.need', pk=obj.pk)
     return {'form': form}
 
 @url('/needs/<string:pk>')
 @requires_auth
 @entitled(lambda pk: u'{0}'.format(default_storage().get(Need,pk)))
-@as_html('devel_tasks/need_detail.html')
+@as_html('needs/need_detail.html')
 def need(request, pk):
     db = default_storage()
     obj = db.get(Need, pk)
@@ -112,7 +112,7 @@ def need(request, pk):
 @url('/plans/')
 @requires_auth
 @entitled(u'Plans')
-@as_html('devel_tasks/plan_index.html')
+@as_html('needs/plan_index.html')
 def plan_index(request):
     db = default_storage()
     plans = Plan.objects(db).order_by('valid_until', reverse=True)
@@ -127,7 +127,7 @@ def plan_index(request):
 @url('/plans/<string:pk>')
 @requires_auth
 @entitled(lambda pk: u'{0}'.format(default_storage().get(Plan,pk)))
-@as_html('devel_tasks/plan_detail.html')
+@as_html('needs/plan_detail.html')
 def plan(request, pk):
     db = default_storage()
     # TODO: drop hierarchy, stick to semantics (reference to Need document)

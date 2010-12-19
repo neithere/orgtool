@@ -69,7 +69,7 @@ a.plan.inactive {
 
 <p>
     {% for project in object.get_projects() %}
-        <a href="{{ url_for('devel_tasks.project', pk=project.pk) }}">{{ project }}</a>
+        <a href="{{ url_for('orgtool.ext.needs.views.project', pk=project.pk) }}">{{ project }}</a>
     {% endfor %}
 </p>
 
@@ -80,7 +80,7 @@ a.plan.inactive {
 </ul>
 {% for plan in object.get_plans() %}
     <li>
-        <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}" 
+        <a href="{{ url_for('orgtool.ext.needs.views.plan', pk=plan.pk) }}" 
            class="plan {% if not plan.is_active() %}inactive{% endif %}">{{ plan }}</a>
     </li>
 {% endfor %}
@@ -93,7 +93,7 @@ a.plan.inactive {
 </ul>
 {% for event in object.get_events() %}
     <li>{{ event }}
-{#        <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}" 
+{#        <a href="{{ url_for('needs.plan', pk=plan.pk) }}" 
            class="plan {% if not plan.is_active() %}inactive{% endif %}">{{ plan }}</a>
 #}
     </li>

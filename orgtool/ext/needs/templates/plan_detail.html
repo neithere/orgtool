@@ -60,7 +60,7 @@ div.event {
 
     {% if outcome %}
         <p class="outcome">Outcome: 
-            <a href="{{ url_for('devel_tasks.need', pk=outcome.pk) }}">
+            <a href="{{ url_for('orgtool.ext.needs.views.need', pk=outcome.pk) }}">
                 {{ outcome }}</a></p>
     {% endif %}
 
@@ -111,7 +111,7 @@ div.event {
 
     {% if object.unlocks_plan %}
         <p>Unlocks plan 
-            <a href="{{ url_for('devel_tasks.views.plan', 
+            <a href="{{ url_for('orgtool.ext.needs.views.plan', 
                                 pk=object.unlocks_plan.pk) }}">{{ object.unlocks_plan }}</a>.</p>
 
     {% endif %}
@@ -125,7 +125,7 @@ div.event {
                 {% if dep.is_active() %}todo{% endif %}
                 {% if dep.is_accomplished %}accomplished{% endif %}
                 {% if dep.is_cancelled() %}cancelled{% endif %}">
-                <a href="{{ url_for('devel_tasks.views.plan', pk=dep.pk) }}">{{ dep }}</a></li>
+                <a href="{{ url_for('orgtool.ext.needs.views.plan', pk=dep.pk) }}">{{ dep }}</a></li>
         {% endfor %}
         </ul>
     {% endif %}

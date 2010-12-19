@@ -30,7 +30,7 @@ a.plan.inactive { color: gray; text-decoration: line-through }
     <ul>
     {% for need in object.needs %}
         <li>
-            <a href="{{ url_for('devel_tasks.need', 
+            <a href="{{ url_for('orgtool.ext.needs.views.need', 
                                 pk=need.pk) }}"
                 class="need
                     {% if need.is_satisfied %}satisfied{% endif %}
@@ -54,7 +54,7 @@ a.plan.inactive { color: gray; text-decoration: line-through }
     </ul>
     {% for plan in object.get_plans() %}
         <li>
-            <a href="{{ url_for('devel_tasks.plan', pk=plan.pk) }}" 
+            <a href="{{ url_for('orgtool.ext.needs.views.plan', pk=plan.pk) }}" 
                class="plan {% if not plan.is_active() %}inactive{% endif %}">{{ plan }}</a>
         </li>
     {% endfor %}
