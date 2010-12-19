@@ -2,7 +2,7 @@
 
 from tool.routing import url
 from tool.ext.breadcrumbs import entitled
-from tool.ext.documents import db
+from tool.ext.documents import default_storage
 from tool.ext.templating import as_html, register_templates
 
 from schema import Bookmark, Idea
@@ -12,6 +12,7 @@ from schema import Bookmark, Idea
 @entitled(u'Ideas')
 @as_html('notes/ideas.html')
 def idea_index(request, tag=None):
+    db = default_storage()
     ideas = Idea.objects(db).order_by('date_time', reverse=True)
     if 'q' in request.values:
         # TODO: multiple fields
@@ -30,10 +31,11 @@ def idea_index(request, tag=None):
 @entitled(u'Bookmarks')
 @as_html('notes/bookmarks.html')
 def bookmark_index(request, tag=None):
+    db = default_storage()
     bookmarks = Bookmark.objects(db).order_by('date_time', reverse=True)
     if tag:
         tag = tag.strip().split()
-        bookmarks = bookmarks.where(tags__contains_all=tag)
+        bookmarks = bookmarks.where(tags__contains=tag)
     if 'q' in request.values:
         # TODO: multiple fields
         bookmarks = bookmarks.where(summary__contains=request.values['q'])

@@ -3,8 +3,8 @@
 import datetime
 from dateutil.rrule import rrule
 
-from docu import Document, Field as f
-from docu import validators
+from doqu import Document, Field as f
+from doqu import validators
 
 from orgtool.ext.tracking import TrackedDocument
 
