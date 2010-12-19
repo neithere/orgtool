@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="overflow: hidden;">
+
+    <div style="float: left; width: 50%">
+        <h2>Оригинал документа {{ page.image.file.size }}</h2>
+        <a href="{{ page.get_image_url() }}">
+            <img src="{{ thumbnail(page.image, 400, 600) }}" alt="{{ page.summary }}"/>
+        </a>
+    </div>
+
+    <div style="float: right; width: 48%">
+        <h2>Извлеченный текст</h2>
+        {{ page.details|replace('\n','<br/>') }}
+    </div>
+
+</div>
+
+{% endblock content %}

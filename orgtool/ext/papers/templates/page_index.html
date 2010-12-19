@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<ul style="overflow: hidden;">
+{% for page in pages %}
+    <li style="float: left; width: 45%; padding: 1ex 2ex; overflow: hidden;">
+        <a href="{{ url_for('orgtool.ext.papers.views.page_detail', pk=page.pk) }}"
+            style="text-decoration:none;">
+            <img src="{{ thumbnail(page.image, 200, 200) }}" alt="{{ page }}"
+                style="-moz-border-radius: 8px; -moz-box-shadow: 2px 2px 10px #bbb; float:left; margin: 0 2ex 0 0"/>
+            <div style="">
+                <h2>{{ page }}</h2>
+                {{ page.details|truncate(300) if page.details else '' }}
+            </div>
+        </a>
+    </li>
+{% endfor %}
+</ul>
+
+{% endblock content %}
