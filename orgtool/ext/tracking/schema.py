@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-from docu import Document, Field as f
+from doqu import Document, Field as f
 
 
 class TrackedDocument(Document):
@@ -11,10 +11,10 @@ class TrackedDocument(Document):
     saving them via TrackedDocument instances or its subclasses' instances.
     """
     date_time_created = f(datetime.datetime, essential=True,
-                          default=datetime.datetime.now)
+                          default=datetime.datetime.utcnow)
     date_time_updated = f(datetime.datetime, essential=True,
-                          default=datetime.datetime.now)
+                          default=datetime.datetime.utcnow)
 
     def save(self, *args, **kwargs):
-        self['date_time_updated'] = datetime.datetime.now()
+        self['date_time_updated'] = datetime.datetime.utcnow()
         return super(TrackedDocument, self).save(*args, **kwargs)
