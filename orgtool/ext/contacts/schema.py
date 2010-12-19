@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from docu import Document, Field as f
+from doqu import Document, Field as f
 from werkzeug import cached_property
 from orgtool.ext.tracking import TrackedDocument
+from orgtool.ext.actors.schema import Actor
 
 
-__all__ = ['Actor', 'Organization', 'Person', 'Contact']
+__all__ = ['Contact']
 
 
 CONTACT_TYPES = (
@@ -23,41 +24,13 @@ CONTACT_SCOPES = (
 )
 
 
-class Actor(TrackedDocument):
-    name = f(unicode, required=True)
-    is_actor = f(bool, choices=[True])
-
-    def __unicode__(self):
-        return u'{name}'.format(**self)
-
-    @cached_property
-    def contacts(self):
-        db = self._saved_state.storage
-        return Contact.objects(db).where(actor=self.pk)
-
-
-class Organization(Actor):
-    is_organization = f(bool, choices=[True])
-
-
-class Person(Actor):
-    name = f(unicode, required=True,
-             default=lambda d: ' '.join([d.first_name or '',
-                                         d.last_name or '']).strip())
-    first_name = f(unicode, essential=True)
-    second_name = f(unicode, essential=True)
-    last_name = f(unicode, essential=True)
-    details = f(unicode)
-#    birth_date =
-
-
 class Contact(TrackedDocument):
     summary = f(unicode, required=True,
-                default=lambda d: d.person.name if d.person else None)
+                default=lambda d: unicode(d.actor) or None)
     actor = f(Actor)
 
-    kind = f(unicode, required=True, choices=CONTACT_TYPES)
-    scope = f(unicode, choices=CONTACT_SCOPES, default=CONTACT_SCOPES[0][0])
+    kind = f(unicode, required=True, choices=CONTACT_TYPES, default='text')
+    scope = f(unicode, choices=CONTACT_SCOPES, default=CONTACT_SCOPES[0])
     value = f(unicode, required=True)
 
     # XXX validators?
@@ -76,4 +49,13 @@ class Contact(TrackedDocument):
 
     def __unicode__(self):
         return u'{summary} {kind} {value} ({scope})'.format(**self)
+
+# class Actor(...):
+#    @cached_property
+#    def contacts(self):
+#        db = self._saved_state.storage
+#        return Contact.objects(db).where(actor=self.pk)
+
+# TODO use Docu's reverse relationship API when it's ready
+Actor.contacts = cached_property(lambda self: Contact.objects(self._saved_state.storage).where(actor=self.pk))
 
