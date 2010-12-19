@@ -6,9 +6,13 @@ Functions for parsing "informal" date definitions.
 import datetime
 from dateutil.rrule import *
 from lepl import *
+import logging
 
 
 __all__ = ['informal_rrule']
+
+
+logger = logging.getLogger(__name__)
 
 
 # The mappings are ordered because the parser must not match "week" before it
@@ -172,7 +176,7 @@ def informal_rrule(string, since=None, until=None):
                 value = value[0]
             kwargs[name] = value
 
-    print u'rrule(**{0})'.format(kwargs)
+    logger.debug(u'rrule(**{0})'.format(kwargs))
 
     return rrule(**kwargs)
 
