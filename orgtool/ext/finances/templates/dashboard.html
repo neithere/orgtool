@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style type="text/css">
+.money { text-align:right; font-weight: bold; }
+.income { color: green }
+.expense { color: red }
+.outdated { color: gray; background: #ddd}
+.outdated a { color: gray }
+</style>
+{% endblock head %}
+
+{% block content %}
+
+<p>See also: <a href="{{ url_for('orgtool.ext.finances.plan_index') }}">all contracts</a>, 
+             <a href="{{ url_for('orgtool.ext.finances.event_index') }}">all payments</a>.</p>
+
+<img src="{{ chart_url_for_payments(payments, only_smooth=False, 
+                                    width=900, height=250,
+                                    currency=default_currency,
+                                    max_days=300) }}" alt="All payments"/>
+
+<ul style="overflow: hidden; list-style: none;">
+    {% for column in contracts.where_not(next_date_time=None)|slice(3) %}
+        <li style="width: 33%; float: left; margin: 0;">
+            {% for plan in column %}
+                {% if plan.next_date_time %}
+                    <h2><a href="{{ url_for('orgtool.ext.finances.plan', pk=plan.pk) }}">{{ plan }}</a></h2>
+                        {% if plan.next_date_time < today %}
+                            <strong>???</strong>
+                        {% endif %}
+
+                        <span class="{% if plan.expected_payment_amount|float > 0 %}income{% else %}expense{% endif %}">
+                            <strong>{{ plan.get_expected_payment_amount_as(default_currency)|string|replace("-","&minus;")}}&nbsp;{{ default_currency }}</strong>
+                            {% if not plan.currency == default_currency %}
+                                ({{ plan.expected_payment_amount|string|replace("-","&minus;") }}&nbsp;{{ plan.currency }})
+                            {% endif %}
+                            {% if not plan.is_fee_fixed %}(approx.){% endif %}
+                        </span>
+
+                        <span title="{{ plan.next_date_time.strftime("%d %B %Y") }}">{{ render_rel_delta(plan.next_date_time) }}</span>
+                        {% set chart_url = chart_url_for_payments(plan.events,
+                                    max_days=365, 
+                                    only_smooth=False,
+                                    currency=default_currency,
+                        ) %}
+                        {% if chart_url %}
+                            <img src="{{ chart_url }}" alt="payments"/>
+                        {% else %}
+                            <p>No payments within last year.</p>
+                        {% endif %}
+                {% endif %}
+            {% endfor %}
+        </li>
+    {% endfor %}
+</ul>
+
+<p>Only plans with known next payment date are shown.</p>
+
+<p>Higher is always better. Try to keep expenses closer to zero and income higher from zero. :)</p>
+
+{% endblock content %}

@@ -4,6 +4,8 @@
 
 <p><a href="{{ admin_url_for(object, 'finances') }}">View in admin</a></p>
 
+<img src="{{ chart_url_for_payments(object.events, width=800, height=300, only_smooth=False) }}" alt="payments"/>
+
 <div style="float: right; width: 48%;"
     {% if object.stakeholder %}
         <p>Заинтересованное лицо: {{ object.stakeholder|urlize(40, true) }}</p>
@@ -32,6 +34,9 @@
             <dt>Actual fee</dt>
                 <dd>{{ object.actual_daily_fee }}&nbsp;{{ object.currency }} a day</dd>
                 <dd>{{ object.actual_monthly_fee }}&nbsp;{{ object.currency }} a month</dd>
+                <dd>{{ object.expected_payment_amount }}&nbsp;{{ object.currency }} per payment
+                    {% if object.is_fee_fixed %}(fixed fee){% else %}(qu0.75){% endif %}
+                </dd>
             <dt>Total {% if object.actual_total_fee < 0 %}spent{% else %}earned{% endif %}</dt>
                 <dd>{{ object.actual_total_fee }}&nbsp;{{ object.currency }}</dd>
                 {# FIXME what if payments include other currencies? #}
@@ -43,7 +48,9 @@
     {#<p>{{ object.describe_recurrence() }}</p>#}
     {% if object.dates_rrule %}
         <p>Plan: <em>{{ object.dates_rrule_text }}</em>.</p>
-        <p>Next: <strong>{{ object.next_date_time.strftime("%A, %d %B %Y") }}</strong>.</p>
+        {% if object.next_date_time %} {# may be None if in the past #}
+            <p>Next: <strong>{{ object.next_date_time.strftime("%A, %d %B %Y") }}</strong>.</p>
+        {% endif %}
         {{ object.days_since_last_event }}
         {{ object.days_to_next_event }}
     {% endif %}
@@ -53,7 +60,9 @@
     {% endif %}
 </div>
 
-<div style="float: left; width: 48%">
+
+<div style="float: left; width: 48%">    
+
     <table>
         <tr>
             <th>date</th>
