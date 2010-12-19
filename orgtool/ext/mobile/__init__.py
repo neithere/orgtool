@@ -7,10 +7,13 @@ Incremental importing of the SMS archive from a mobile phone using
 
 .. _python-gammu: http://wammu.eu/python-gammu/
 
+Configuration
+-------------
+
 Settings example (in YAML)::
 
-    bundles:
-        orgtool.ext.gammu:
+    extensions:
+        orgtool.ext.mobile.MobileETL:
             my_number: "+1234567890"
 
 .. note::
@@ -26,15 +29,45 @@ Settings example (in YAML)::
     not be fixed because the exact order seems to depend on the phone model. We
     just omit the folder.
 
-Adds commands:
+Commands
+--------
 
-* import-mobile-sms
-* import-mobile-contacts
-* import-mobile-plans
+This extension provides following commands within namespace "mobile":
 
+* import-sms
+* import-contacts
+* import-plans
+
+API reference
+-------------
 """
 from tool.dist import check_dependencies
+from tool.plugins import features, requires #, BasePlugin
 
 check_dependencies(__name__)
 
-import commands
+from commands import (
+    import_contacts, import_sms, import_plans,
+)
+
+
+@features('mobile')
+@requires('{document_storage}')
+def setup(app, conf):
+    "Tool extension for importing data from mobile phones."
+    assert isinstance(conf.get('my_numbers'), dict)
+    commands = (import_contacts, import_sms, import_plans)
+    app.cli_parser.add_commands(commands, namespace='mobile')
+    return conf
+
+'''
+class MobileETL(BasePlugin):
+    "Tool extension for importing data from mobile phones."
+    features = 'mobile'
+    requires = ('{document_storage}',)
+    commands = (import_contacts, import_sms, import_plans)
+
+    def make_env(self, my_numbers):
+        assert isinstance(my_numbers, dict)
+        return {'my_numbers': my_numbers}
+'''

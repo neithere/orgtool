@@ -1,7 +1,8 @@
 import datetime
-from docu import Field as f
+from doqu import Field as f
 from orgtool.ext.talks import Message
-from orgtool.ext.contacts import Contact, Actor
+from orgtool.ext.actors.schema import Actor
+from orgtool.ext.contacts import Contact
 from orgtool.ext.events import Plan
 
 
@@ -13,6 +14,10 @@ EVENT_SOURCE = u'gammu-plan'
 
 class GammuSMS(Message):
     source = f(unicode, choices=[SMS_SOURCE], default=SMS_SOURCE)
+
+    defaults = {
+        'summary': u'No text',
+    }
 
 
 class GammuActor(Actor):
